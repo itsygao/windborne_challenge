@@ -84,7 +84,7 @@ async function loadBalloons() {
                     }
 
                     // Store latest valid position
-                    lastValidPositions.set(index, { lat, lon, timestamp });
+                    lastValidPositions.set(index, { lat, lon, altitude, timestamp });
 
                     // Add to balloon paths
                     if (!balloonPaths.has(index)) {
@@ -112,9 +112,9 @@ async function loadBalloons() {
             L.polyline(path, { color: color, weight: 2 }).addTo(map);
 
             // Add marker only for the latest position
-            let latestPos = path[path.length - 1];
-            let marker = L.marker(latestPos).addTo(map);
-            marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}, Lon: ${latestPos[1]}, Altitude: ${latestPos[2]}`);
+            let latestPos = [lastValidPositions.get(id).lat, lastValidPositions.get(id).lon, lastValidPositions.get(id).altitude, lastValidPositions.get(id).timestamp];
+            let marker = L.marker([latestPos[0], latestPos[1]]).addTo(map);
+            marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}<br>Lon: ${latestPos[1]}<br>Altitude: ${latestPos[2]}<br>timestamp: ${latestPos[3]}`).openPopup();
         });
 
     } catch (error) {
