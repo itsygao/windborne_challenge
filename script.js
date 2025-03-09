@@ -25,7 +25,7 @@ async function loadBalloons() {
 
         // Fetch and load balloon data from each selected file
         for (let file of latestFiles) {
-            let url = balloonsFolder + file;
+            let url = balloonsFolder + file + ".json";
             try {
                 let balloonResponse = await fetch(url);
                 if (!balloonResponse.ok) continue;
