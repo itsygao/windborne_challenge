@@ -183,7 +183,7 @@ function selectAllBalloons(selectAll) {
         cb.checked = selectAll;
         if (selectAll) balloonSelections.add(parseInt(cb.value));
     });
-    updateVisualization();
+    // updateVisualization();
 }
 
 function updateVisualization() {
@@ -197,23 +197,36 @@ function updateVisualization() {
 }
 
 function redrawBalloons() {
-    balloonMarkers.forEach(marker => map.removeLayer(marker)); // Clear old markers
-    balloonMarkers = [];
+    // Remove all existing map layers (lines, dots, and markers)
+    balloonMarkers.forEach(marker => map.removeLayer(marker));
+    balloonMarkers = []; // Reset array
 
     let selectedPaths = Array.from(balloonSelections).map(i => balloonPaths.get(i));
-    
+    let infoText = document.getElementById("info-text"); // Get the info display area
+
+    let infoContent = ""; // Store the information text
+
     selectedPaths.forEach((path, index) => {
         if (!path) return;
-        
+
         let color = COLORS[index % COLORS.length];
 
         // Draw path
         let polyline = L.polyline(path, { color: color, weight: 2 }).addTo(map);
         balloonMarkers.push(polyline);
 
-        let latestPos = [lastValidPositions.get(index).lat, lastValidPositions.get(index).lon, lastValidPositions.get(index).altitude, lastValidPositions.get(index).timestamp];
-        let marker = L.marker([latestPos[0], latestPos[1]]).addTo(map);
-        marker.bindPopup(`Balloon ${index}<br>Lat: ${latestPos[0]}<br>Lon: ${latestPos[1]}<br>Altitude: ${latestPos[2]}<br>timestamp: ${latestPos[3]}`).openPopup();
+        // Ensure latest position is valid before creating marker
+        let latest = lastValidPositions.get(index);
+        if (latest) {
+            let { lat, lon, altitude, timestamp } = latest;
+            let marker = L.marker([lat, lon]).addTo(map);
+            marker.bindPopup(`Balloon ${index}<br>Lat: ${lat}<br>Lon: ${lon}<br>Altitude: ${altitude}<br>Timestamp: ${timestamp}`);
+
+            balloonMarkers.push(marker); // Store marker for future removal
+
+            // Add to info display
+            infoContent += `Balloon ${index}: Lat ${lat}, Lon ${lon}, Altitude ${altitude}, Timestamp ${timestamp}<br>`;
+        }
 
         // Draw dots for each location
         path.forEach(([lat, lon]) => {
@@ -222,10 +235,10 @@ function redrawBalloons() {
         });
     });
 
-    // Print selected paths if less than 10 balloons are chosen
+    // Update the UI with selected paths info
     if (selectedPaths.length < 10) {
-        console.log("Selected Balloon Paths:", selectedPaths);
+        infoText.innerHTML = infoContent || "No balloons selected.";
+    } else {
+        infoText.innerHTML = "Too many balloons selected, data hidden.";
     }
 }
-
-// Call `createCheckboxes(balloonCount)` inside `loadBalloons()` after getting balloon count

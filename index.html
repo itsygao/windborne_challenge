@@ -57,7 +57,9 @@
         <input type="text" id="chat-input" placeholder="Ask about a balloon..." />
         <button onclick="sendMessage()">Ask</button>
     </div>
-
+    <div id="balloon-info" style="margin: 10px 0; padding: 5px; border: 1px solid #ccc; min-height: 40px;">
+        <strong>Balloon Info:</strong> <span id="info-text">Select balloons to see details here.</span>
+    </div>
     <div id="controls">
         <button onclick="selectAllBalloons(true)">Select All</button>
         <button onclick="selectAllBalloons(false)">Deselect All</button>
