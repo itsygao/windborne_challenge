@@ -26,29 +26,79 @@ async function loadBalloons() {
         fileList.sort().reverse();
         let latestFiles = fileList.slice(0, 24);
 
-        // Store balloon paths
-        let balloonPaths = new Map();
 
         // Fetch and process balloon data
+        let balloonCount = null; // Stores the expected number of balloons
+        let balloonPaths = new Map(); // Stores paths by index
+        let lastValidPositions = new Map(); // Stores last known valid positions
+
         for (let file of latestFiles) {
             let url = balloonsFolder + file + ".json";
+            let timestamp = file.replace(".json", ""); // Extract timestamp from filename
+
             try {
                 let balloonResponse = await fetch(url);
-                if (!balloonResponse.ok) continue;
+                if (!balloonResponse.ok) {
+                    console.warn(`Skipping file ${file} due to fetch error.`);
+                    continue;
+                }
 
-                let data = await balloonResponse.json();
-                data.forEach(balloon => {
-                    let [lat, lon, altitude, id] = balloon;  // Assuming each entry has an ID
-                    if (!balloonPaths.has(id)) {
-                        balloonPaths.set(id, []);
+                let rawText = await balloonResponse.text(); // Read raw response first
+                let data;
+
+                try {
+                    data = JSON.parse(rawText); // Safely parse JSON
+                } catch (jsonError) {
+                    console.error(`Failed to parse JSON from ${file}:`, jsonError);
+                    continue;
+                }
+
+                // Ensure data is a valid array
+                if (!Array.isArray(data)) {
+                    console.warn(`Skipping file ${file} due to unexpected format.`);
+                    continue;
+                }
+
+                // Check for consistent balloon count
+                if (balloonCount === null) {
+                    balloonCount = data.length; // Set expected count on first file
+                } else if (data.length !== balloonCount) {
+                    console.warn(`File ${file} has ${data.length} balloons, expected ${balloonCount}!`);
+                    continue; // Skip inconsistent file
+                }
+
+                // Process each balloon by its index
+                data.forEach((balloon, index) => {
+                    if (!Array.isArray(balloon) || balloon.length < 3) return; // Ignore malformed data
+                    let [lat, lon, altitude] = balloon;
+
+                    // If data is completely invalid, keep previous location if available
+                    if (isNaN(lat) || isNaN(lon) || isNaN(altitude)) {
+                        if (lastValidPositions.has(index)) {
+                            let { lat: prevLat, lon: prevLon } = lastValidPositions.get(index);
+                            lat = prevLat;
+                            lon = prevLon;
+                        } else {
+                            return; // No valid previous position, ignore balloon
+                        }
                     }
-                    balloonPaths.get(id).push([lat, lon]);
+
+                    // Store latest valid position
+                    lastValidPositions.set(index, { lat, lon, timestamp });
+
+                    // Add to balloon paths
+                    if (!balloonPaths.has(index)) {
+                        balloonPaths.set(index, []);
+                    }
+                    balloonPaths.get(index).push([lat, lon]);
                 });
 
             } catch (error) {
-                console.error(`Error loading ${file}:`, error);
+                console.error(`Error processing ${file}:`, error);
             }
         }
+
+
 
         // Draw balloon paths and add latest markers
         let colorIndex = 0;
@@ -64,7 +114,7 @@ async function loadBalloons() {
             // Add marker only for the latest position
             let latestPos = path[path.length - 1];
             let marker = L.marker(latestPos).addTo(map);
-            marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}, Lon: ${latestPos[1]}`);
+            marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}, Lon: ${latestPos[1]}, Altitude: ${latestPos[2]}`);
         });
 
     } catch (error) {
