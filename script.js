@@ -3,6 +3,9 @@ const map = L.map('map').setView([20, 0], 2);
 // Add OpenStreetMap tiles
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+// Color palette for different balloons
+const COLORS = ["red", "blue", "green", "purple", "orange", "cyan", "magenta", "yellow", "lime", "pink"];
+
 // Get the latest balloon data (last 24 hours)
 async function loadBalloons() {
     const now = new Date();
@@ -19,11 +22,14 @@ async function loadBalloons() {
         
         let fileList = await response.json();
 
-        // Sort files in descending order (latest first) and select at most 72
+        // Sort files in descending order (latest first) and select at most 24
         fileList.sort().reverse();
-        let latestFiles = fileList.slice(0, 72);
+        let latestFiles = fileList.slice(0, 24);
 
-        // Fetch and load balloon data from each selected file
+        // Store balloon paths
+        let balloonPaths = new Map();
+
+        // Fetch and process balloon data
         for (let file of latestFiles) {
             let url = balloonsFolder + file + ".json";
             try {
@@ -32,14 +38,34 @@ async function loadBalloons() {
 
                 let data = await balloonResponse.json();
                 data.forEach(balloon => {
-                    let marker = L.marker([balloon[0], balloon[1]]).addTo(map);
-                    marker.bindPopup(`Altitude: ${balloon[2]} km`);
+                    let [lat, lon, altitude, id] = balloon;  // Assuming each entry has an ID
+                    if (!balloonPaths.has(id)) {
+                        balloonPaths.set(id, []);
+                    }
+                    balloonPaths.get(id).push([lat, lon]);
                 });
 
             } catch (error) {
                 console.error(`Error loading ${file}:`, error);
             }
         }
+
+        // Draw balloon paths and add latest markers
+        let colorIndex = 0;
+        balloonPaths.forEach((path, id) => {
+            if (path.length < 2) return;  // Skip if not enough data points
+            
+            let color = COLORS[colorIndex % COLORS.length];
+            colorIndex++;
+
+            // Draw the path
+            L.polyline(path, { color: color, weight: 2 }).addTo(map);
+
+            // Add marker only for the latest position
+            let latestPos = path[path.length - 1];
+            let marker = L.marker(latestPos).addTo(map);
+            marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}, Lon: ${latestPos[1]}`);
+        });
 
     } catch (error) {
         console.error("Error fetching balloon index:", error);
