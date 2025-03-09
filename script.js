@@ -6,11 +6,17 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 // Color palette for different balloons
 const COLORS = ["red", "blue", "green", "purple", "orange", "cyan", "magenta", "yellow", "lime", "pink"];
 
+let balloonSelections = new Set(); // Stores selected balloon indices
+let balloonPaths = new Map(); // Stores paths by index
+let balloonMarkers = []; // Store plotted points
+let lastValidPositions = new Map(); // Stores last known valid positions
+
 // Get the latest balloon data (last 24 hours)
 async function loadBalloons() {
     const now = new Date();
     const balloonsFolder = "https://itsygao.github.io/windborne_challenge/data/";
     const indexFile = balloonsFolder + "index.json";
+    balloonPaths.clear();
 
     try {
         // Fetch the list of available JSON files
@@ -29,8 +35,8 @@ async function loadBalloons() {
 
         // Fetch and process balloon data
         let balloonCount = null; // Stores the expected number of balloons
-        let balloonPaths = new Map(); // Stores paths by index
-        let lastValidPositions = new Map(); // Stores last known valid positions
+        // let balloonPaths = new Map(); // Stores paths by index
+        // let lastValidPositions = new Map(); // Stores last known valid positions
 
         for (let file of latestFiles) {
             let url = balloonsFolder + file + ".json";
@@ -152,10 +158,6 @@ async function sendMessage() {
 
 loadBalloons();
 
-let balloonSelections = new Set(); // Stores selected balloon indices
-let balloonPaths = new Map(); // Stores paths by index
-let balloonMarkers = []; // Store plotted points
-
 function createCheckboxes(balloonCount) {
     let checkboxContainer = document.getElementById("balloon-checkboxes");
     checkboxContainer.innerHTML = ""; // Clear old checkboxes
@@ -165,15 +167,13 @@ function createCheckboxes(balloonCount) {
         checkbox.type = "checkbox";
         checkbox.checked = true;
         checkbox.value = i;
-        checkbox.onchange = updateVisualization;
-        balloonSelections.add(i); // Default to all selected
+        checkbox.onchange = () => updateVisualization();
 
         let label = document.createElement("label");
-        label.textContent = `Balloon ${i}`;
         label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(`Balloon ${i}`));
 
         checkboxContainer.appendChild(label);
-        checkboxContainer.appendChild(document.createElement("br"));
     }
 }
 
@@ -192,7 +192,7 @@ function updateVisualization() {
         balloonSelections.add(parseInt(cb.value));
     });
 
-    redrawBalloons();
+    console.log("Balloon selections updated. Click Replot to update visualization.");
 }
 
 function redrawBalloons() {
