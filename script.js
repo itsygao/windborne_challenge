@@ -6,7 +6,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 // Get the latest balloon data (last 24 hours)
 async function loadBalloons() {
     const now = new Date();
-    const balloonsFolder = "https://your-username.github.io/windborne_challenge/data/";
+    const balloonsFolder = "https://itsygao.github.io/windborne_challenge/data/";
     const indexFile = balloonsFolder + "index.json";
 
     try {
