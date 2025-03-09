@@ -98,24 +98,25 @@ async function loadBalloons() {
             }
         }
 
-
+        createCheckboxes(balloonCount);
+        selectAllBalloons(true);
 
         // Draw balloon paths and add latest markers
-        let colorIndex = 0;
-        balloonPaths.forEach((path, id) => {
-            if (path.length < 2) return;  // Skip if not enough data points
+        // let colorIndex = 0;
+        // balloonPaths.forEach((path, id) => {
+        //     if (path.length < 2) return;  // Skip if not enough data points
             
-            let color = COLORS[colorIndex % COLORS.length];
-            colorIndex++;
+        //     let color = COLORS[colorIndex % COLORS.length];
+        //     colorIndex++;
 
-            // Draw the path
-            L.polyline(path, { color: color, weight: 2 }).addTo(map);
+        //     // Draw the path
+        //     L.polyline(path, { color: color, weight: 2 }).addTo(map);
 
-            // Add marker only for the latest position
-            let latestPos = [lastValidPositions.get(id).lat, lastValidPositions.get(id).lon, lastValidPositions.get(id).altitude, lastValidPositions.get(id).timestamp];
-            let marker = L.marker([latestPos[0], latestPos[1]]).addTo(map);
-            marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}<br>Lon: ${latestPos[1]}<br>Altitude: ${latestPos[2]}<br>timestamp: ${latestPos[3]}`).openPopup();
-        });
+        //     // Add marker only for the latest position
+        //     let latestPos = [lastValidPositions.get(id).lat, lastValidPositions.get(id).lon, lastValidPositions.get(id).altitude, lastValidPositions.get(id).timestamp];
+        //     let marker = L.marker([latestPos[0], latestPos[1]]).addTo(map);
+        //     marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}<br>Lon: ${latestPos[1]}<br>Altitude: ${latestPos[2]}<br>timestamp: ${latestPos[3]}`).openPopup();
+        // });
 
     } catch (error) {
         console.error("Error fetching balloon index:", error);
@@ -150,3 +151,76 @@ async function sendMessage() {
 }
 
 loadBalloons();
+
+let balloonSelections = new Set(); // Stores selected balloon indices
+let balloonPaths = new Map(); // Stores paths by index
+let balloonMarkers = []; // Store plotted points
+
+function createCheckboxes(balloonCount) {
+    let checkboxContainer = document.getElementById("balloon-checkboxes");
+    checkboxContainer.innerHTML = ""; // Clear old checkboxes
+
+    for (let i = 0; i < balloonCount; i++) {
+        let checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = true;
+        checkbox.value = i;
+        checkbox.onchange = updateVisualization;
+        balloonSelections.add(i); // Default to all selected
+
+        let label = document.createElement("label");
+        label.textContent = `Balloon ${i}`;
+        label.appendChild(checkbox);
+
+        checkboxContainer.appendChild(label);
+        checkboxContainer.appendChild(document.createElement("br"));
+    }
+}
+
+function selectAllBalloons(selectAll) {
+    balloonSelections.clear();
+    document.querySelectorAll("#balloon-checkboxes input").forEach(cb => {
+        cb.checked = selectAll;
+        if (selectAll) balloonSelections.add(parseInt(cb.value));
+    });
+    updateVisualization();
+}
+
+function updateVisualization() {
+    balloonSelections.clear();
+    document.querySelectorAll("#balloon-checkboxes input:checked").forEach(cb => {
+        balloonSelections.add(parseInt(cb.value));
+    });
+
+    redrawBalloons();
+}
+
+function redrawBalloons() {
+    balloonMarkers.forEach(marker => map.removeLayer(marker)); // Clear old markers
+    balloonMarkers = [];
+
+    let selectedPaths = Array.from(balloonSelections).map(i => balloonPaths.get(i));
+    
+    selectedPaths.forEach((path, index) => {
+        if (!path) return;
+        
+        let color = COLORS[index % COLORS.length];
+
+        // Draw path
+        let polyline = L.polyline(path, { color: color, weight: 2 }).addTo(map);
+        balloonMarkers.push(polyline);
+
+        // Draw dots for each location
+        path.forEach(([lat, lon]) => {
+            let dot = L.circleMarker([lat, lon], { radius: 3, color: color, fillOpacity: 1 }).addTo(map);
+            balloonMarkers.push(dot);
+        });
+    });
+
+    // Print selected paths if less than 10 balloons are chosen
+    if (selectedPaths.length < 10) {
+        console.log("Selected Balloon Paths:", selectedPaths);
+    }
+}
+
+// Call `createCheckboxes(balloonCount)` inside `loadBalloons()` after getting balloon count
