@@ -191,6 +191,7 @@ function updateVisualization() {
     document.querySelectorAll("#balloon-checkboxes input:checked").forEach(cb => {
         balloonSelections.add(parseInt(cb.value));
     });
+    redrawBalloons()
 
     console.log("Balloon selections updated. Click Replot to update visualization.");
 }
@@ -209,6 +210,10 @@ function redrawBalloons() {
         // Draw path
         let polyline = L.polyline(path, { color: color, weight: 2 }).addTo(map);
         balloonMarkers.push(polyline);
+
+        let latestPos = [lastValidPositions.get(index).lat, lastValidPositions.get(index).lon, lastValidPositions.get(index).altitude, lastValidPositions.get(index).timestamp];
+        let marker = L.marker([latestPos[0], latestPos[1]]).addTo(map);
+        marker.bindPopup(`Balloon ${index}<br>Lat: ${latestPos[0]}<br>Lon: ${latestPos[1]}<br>Altitude: ${latestPos[2]}<br>timestamp: ${latestPos[3]}`).openPopup();
 
         // Draw dots for each location
         path.forEach(([lat, lon]) => {
