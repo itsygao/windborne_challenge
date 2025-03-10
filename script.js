@@ -147,7 +147,7 @@ async function sendMessage() {
     // Only send context in the first message
     if (chatHistory.length === 0) {
         let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n');
-        context += "Balloon altitude is in miles. Timestamp is in Pacific Standard Time.\nIn case you see 'taken from last valid timestamp', it means the balloon was last seen at that time and data between that time and the latest time was missing.\n";
+        context += "Latitude and longitude follows the geographic coordinate system (GCS), where latitude ranges from -90 to 90 (South to North) and longitude ranges from -180 to 180 (West to East). Balloon altitude is in miles. Timestamp is in Pacific Standard Time.\nIn case you see 'taken from last valid timestamp', it means the balloon was last seen at that time and data between that time and the latest time was missing.\n";
         context += HTML_PROMPT;
         chatHistory.push({ role: "system", content: context });
         console.log("Initial context: " + context);
