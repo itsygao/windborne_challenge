@@ -127,7 +127,16 @@ async function sendMessage() {
         alert("Please enter your OpenAI API key!");
         return;
     }
+    if (balloonSelections.size === 0) {
+        alert("Please select at least one balloon!");
+        return;
+    }
+    if (balloonSelections.size > 10) {
+        alert("Please select no greater than 10 balloon!");
+        return;
+    }
 
+    let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n')
     let input = document.getElementById("chat-input").value;
     document.getElementById("chat-log").innerHTML += `<p>You: ${input}</p>`;
 
@@ -139,7 +148,7 @@ async function sendMessage() {
         },
         body: JSON.stringify({
             model: "gpt-4",
-            messages: [{ role: "user", content: input }]
+            messages: [{ role: "user", content: context + input }]
         })
     });
 
@@ -214,10 +223,10 @@ function redrawBalloons() {
         // Ensure historical details exist before displaying them
         let history = balloonDetails.get(balloonId);
         if (history) {
-            infoContent += `<strong>Balloon ${balloonId} History:</strong><br>`;
+            infoContent += `**Balloon ${balloonId} History:**<br>`;
 
             history.forEach(([lat, lon, altitude, timestamp]) => {
-                infoContent += `Lat: ${lat}, Lon: ${lon}, Altitude: ${altitude}, Timestamp: ${timestamp}<br>`;
+                infoContent += `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}, Altitude: ${altitude.toFixed(2)}, Timestamp: ${timestamp}<br>`;
             });
 
             infoContent += "<br>"; // Add space between different balloons
