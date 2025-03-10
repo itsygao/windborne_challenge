@@ -80,6 +80,11 @@ async function loadBalloons() {
 
                     // Handle invalid data by using previous values if available
                     let lastValid = lastValidPositions.get(index);
+                    let real_timestamp = timestamp
+                    if (lat === null || isNaN(lat) || lon === null || isNaN(lon) || altitude === null || isNaN(altitude)) {
+                        let temp = lastValid?.real_timestamp ?? "NO_VALID_TIME";
+                        real_timestamp = real_timestamp + " taken from last valid timestamp " + temp.substring(temp.length - 13, temp.length);
+                    }
                     if (lat === null || isNaN(lat)) lat = lastValid?.lat ?? null;
                     if (lon === null || isNaN(lon)) lon = lastValid?.lon ?? null;
                     if (altitude === null || isNaN(altitude)) altitude = lastValid?.altitude ?? null;
@@ -88,7 +93,7 @@ async function loadBalloons() {
                     if (lat === null || lon === null || altitude === null) return;
 
                     // Store latest valid position and timestamp
-                    lastValidPositions.set(index, { lat, lon, altitude, timestamp });
+                    lastValidPositions.set(index, { lat, lon, altitude, real_timestamp });
 
                     // Add to balloon paths
                     if (!balloonPaths.has(index)) {
@@ -96,10 +101,10 @@ async function loadBalloons() {
                         balloonDetails.set(index, []);
                     }
                     balloonPaths.get(index).push([lat, lon]);
-                    balloonDetails.get(index).push([ lat, lon, altitude, timestamp ]);
+                    balloonDetails.get(index).push([ lat, lon, altitude, real_timestamp ]);
 
                     // Add last valid timestamp as an extra entry in the dataset
-                    data[index] = [lat, lon, altitude, timestamp];
+                    data[index] = [lat, lon, altitude, real_timestamp];
                 });
 
             } catch (error) {
