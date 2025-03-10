@@ -121,6 +121,8 @@ async function loadBalloons() {
 }
 
 // AI Chat Function (Uses user-provided API key)
+let chatHistory = []; // Stores all chat messages
+
 async function sendMessage() {
     let apiKey = document.getElementById("api-key").value.trim();
     if (!apiKey) {
@@ -136,9 +138,18 @@ async function sendMessage() {
         return;
     }
 
-    let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n');
+    let selectedModel = document.getElementById("model-select").value;
     let input = document.getElementById("chat-input").value;
     document.getElementById("chat-log").innerHTML += `<p>You: ${input}</p>`;
+
+    // Only send context in the first message
+    if (chatHistory.length === 0) {
+        let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n');
+        chatHistory.push({ role: "system", content: context });
+    }
+
+    // Add user input to chat history
+    chatHistory.push({ role: "user", content: input });
 
     let response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -147,8 +158,8 @@ async function sendMessage() {
             "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [{ role: "user", content: context + input }]
+            model: selectedModel,
+            messages: chatHistory  // Send full chat history
         })
     });
 
@@ -159,8 +170,13 @@ async function sendMessage() {
         return;
     }
 
-    document.getElementById("chat-log").innerHTML += `<p>AI: ${result.choices[0].message.content}</p>`;
+    let aiMessage = result.choices[0].message.content;
+    document.getElementById("chat-log").innerHTML += `<p>AI: ${aiMessage}</p>`;
+
+    // Add AI response to chat history
+    chatHistory.push({ role: "assistant", content: aiMessage });
 }
+
 
 
 loadBalloons();

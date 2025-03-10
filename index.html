@@ -52,6 +52,13 @@
 
     <div id="chatbox">
         <p><strong>AI Chat:</strong></p>
+        <label for="model-select"><strong>Select Model:</strong></label>
+        <select id="model-select">
+            <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+            <option value="gpt-4o">gpt-4o</option>
+            <option value="gpt-4.5-preview">gpt-4.5-preview</option>
+            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+        </select>
         <input type="text" id="api-key" placeholder="Enter OpenAI API Key" /><br><br>
         <div id="chat-log"></div>
         <input type="text" id="chat-input" placeholder="Ask about a balloon! **Balloon Info:** below will be used as context!" />
