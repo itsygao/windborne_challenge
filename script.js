@@ -8,6 +8,7 @@ const COLORS = ["red", "blue", "green", "purple", "orange", "cyan", "magenta", "
 
 let balloonSelections = new Set(); // Stores selected balloon indices
 let balloonPaths = new Map(); // Stores paths by index
+let balloonDetails = new Map();
 let balloonMarkers = []; // Store plotted points
 let lastValidPositions = new Map(); // Stores last known valid positions
 
@@ -92,8 +93,10 @@ async function loadBalloons() {
                     // Add to balloon paths
                     if (!balloonPaths.has(index)) {
                         balloonPaths.set(index, []);
+                        balloonDetails.set(index, []);
                     }
                     balloonPaths.get(index).push([lat, lon]);
+                    balloonDetails.get(index).push([ lat, lon, altitude, timestamp ]);
 
                     // Add last valid timestamp as an extra entry in the dataset
                     data[index] = [lat, lon, altitude, timestamp];
@@ -187,6 +190,7 @@ function redrawBalloons() {
     balloonMarkers = []; // Reset array
 
     let selectedPaths = Array.from(balloonSelections).map(i => balloonPaths.get(i));
+    let selectedDetails = Array.from(balloonSelections).map(i => balloonDetails.get(i));
     let infoText = document.getElementById("info-text"); // Get the info display area
 
     let infoContent = ""; // Store the information text
@@ -196,26 +200,26 @@ function redrawBalloons() {
         if (!path) return;
 
         let color = COLORS[index % COLORS.length];
+        let balloonId = selected[index];
 
         // Draw path
         let polyline = L.polyline(path, { color: color, weight: 2 }).addTo(map);
         balloonMarkers.push(polyline);
 
-        // Ensure latest position is valid before creating marker
-        let latest = lastValidPositions.get(selected[index]);
-        if (latest) {
-            let { lat, lon, altitude, timestamp } = latest;
-            let marker = L.marker([lat, lon]).addTo(map);
-            marker.bindPopup(`Balloon ${selected[index]}<br>Lat: ${lat}<br>Lon: ${lon}<br>Altitude: ${altitude}<br>Timestamp: ${timestamp}`);
+        // Ensure historical details exist before displaying them
+        let history = balloonDetails.get(balloonId);
+        if (history) {
+            infoContent += `<strong>Balloon ${balloonId} History:</strong><br>`;
 
-            balloonMarkers.push(marker); // Store marker for future removal
+            history.forEach(([lat, lon, altitude, timestamp]) => {
+                infoContent += `Lat: ${lat}, Lon: ${lon}, Altitude: ${altitude}, Timestamp: ${timestamp}<br>`;
+            });
 
-            // Add to info display
-            infoContent += `Balloon ${selected[index]}: Lat ${lat}, Lon ${lon}, Altitude ${altitude}, Timestamp ${timestamp}<br>`;
+            infoContent += "<br>"; // Add space between different balloons
         }
 
-        // Draw dots for each location
-        path.forEach(([lat, lon]) => {
+        // Draw markers for each historical point
+        history.forEach(([lat, lon]) => {
             let dot = L.circleMarker([lat, lon], { radius: 3, color: color, fillOpacity: 1 }).addTo(map);
             balloonMarkers.push(dot);
         });
