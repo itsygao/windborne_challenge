@@ -5,6 +5,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 // Color palette for different balloons
 const COLORS = ["red", "blue", "green", "purple", "orange", "cyan", "magenta", "yellow", "lime", "pink"];
+const HTML_PROMPT = "You are generating HTML content strictly within a <p> (paragraph) tag.\nOnly use the following inline HTML tags inside your output: <a>, <strong>, <em>, <span>, <br>, <code>, <mark>, <abbr>, <cite>, <small>, and <u>.\nDo NOT include <meta>, <script>, <style>, <div>, <section>, or any block-level elements.\nExample valid output:\n\n<p>This is an <strong>important</strong> paragraph with a <a href='#'>link</a> and an <em>italic phrase</em>.</p>\n\nAlways ensure the output is fully enclosed within a <p> tag and contains only the allowed tags.\n";
 
 let balloonSelections = new Set(); // Stores selected balloon indices
 let balloonPaths = new Map(); // Stores paths by index
@@ -146,7 +147,8 @@ async function sendMessage() {
     // Only send context in the first message
     if (chatHistory.length === 0) {
         let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n');
-        context += "Balloon altitude is in miles. Timestamp is in Pacific Standard Time.\nIn case you see 'taken from last valid timestamp', it means the balloon was last seen at that time and data between that time and the latest time was missing.\nYou can use HTML elements for output as if in a HTML paragraph (don't use metadata).\n";
+        context += "Balloon altitude is in miles. Timestamp is in Pacific Standard Time.\nIn case you see 'taken from last valid timestamp', it means the balloon was last seen at that time and data between that time and the latest time was missing.\n";
+        context += HTML_PROMPT;
         chatHistory.push({ role: "system", content: context });
         console.log("Initial context: " + context);
     } else if (changedBalloonSelections) {
