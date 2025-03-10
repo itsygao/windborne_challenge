@@ -207,6 +207,7 @@ function redrawBalloons() {
     let infoText = document.getElementById("info-text"); // Get the info display area
 
     let infoContent = ""; // Store the information text
+    let selected = Array.from(balloonSelections);
 
     selectedPaths.forEach((path, index) => {
         if (!path) return;
@@ -218,16 +219,16 @@ function redrawBalloons() {
         balloonMarkers.push(polyline);
 
         // Ensure latest position is valid before creating marker
-        let latest = lastValidPositions.get(index);
+        let latest = lastValidPositions.get(selected[index]);
         if (latest) {
             let { lat, lon, altitude, timestamp } = latest;
             let marker = L.marker([lat, lon]).addTo(map);
-            marker.bindPopup(`Balloon ${index}<br>Lat: ${lat}<br>Lon: ${lon}<br>Altitude: ${altitude}<br>Timestamp: ${timestamp}`);
+            marker.bindPopup(`Balloon ${selected[index]}<br>Lat: ${lat}<br>Lon: ${lon}<br>Altitude: ${altitude}<br>Timestamp: ${timestamp}`);
 
             balloonMarkers.push(marker); // Store marker for future removal
 
             // Add to info display
-            infoContent += `Balloon ${Array.from(balloonSelections)[index]}: Lat ${lat}, Lon ${lon}, Altitude ${altitude}, Timestamp ${timestamp}<br>`;
+            infoContent += `Balloon ${selected[index]}: Lat ${lat}, Lon ${lon}, Altitude ${altitude}, Timestamp ${timestamp}<br>`;
         }
 
         // Draw dots for each location
