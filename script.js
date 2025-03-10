@@ -146,7 +146,7 @@ async function sendMessage() {
     // Only send context in the first message
     if (chatHistory.length === 0) {
         let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n');
-        context += "Balloon altitude is in miles. Timestamp is in Pacific Standard Time.\n";
+        context += "Balloon altitude is in miles. Timestamp is in Pacific Standard Time.\nIn case you see 'taken from last valid timestamp', it means the balloon was last seen at that time and data between that time and the latest time was missing.\nYou can use HTML elements for output as if in a HTML paragraph (don't use metadata).\n";
         chatHistory.push({ role: "system", content: context });
         console.log("Initial context: " + context);
     } else if (changedBalloonSelections) {
@@ -156,7 +156,7 @@ async function sendMessage() {
 
     // Add user input to chat history
     chatHistory.push({ role: "user", content: input });
-    console.log("Prompt: " + context);
+    console.log("Prompt: " + input);
 
     let response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
