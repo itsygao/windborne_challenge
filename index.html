@@ -54,11 +54,11 @@
         <p><strong>AI Chat:</strong></p>
         <input type="text" id="api-key" placeholder="Enter OpenAI API Key" /><br><br>
         <div id="chat-log"></div>
-        <input type="text" id="chat-input" placeholder="Ask about a balloon! The textbox below will be used as context!" />
+        <input type="text" id="chat-input" placeholder="Ask about a balloon! **Balloon Info:** below will be used as context!" />
         <button onclick="sendMessage()">Ask</button>
     </div>
     <div id="balloon-info" style="margin: 10px 0; padding: 5px; border: 1px solid #ccc; min-height: 40px;">
-        **Balloon Info:** <span id="info-text">Select balloons to see details here.</span>
+        **Balloon Info:**<br> <span id="info-text">Select balloons to see details here.</span>
     </div>
     <div id="controls">
         <button onclick="selectAllBalloons(true)">Select All</button>

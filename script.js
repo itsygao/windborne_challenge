@@ -132,11 +132,11 @@ async function sendMessage() {
         return;
     }
     if (balloonSelections.size > 10) {
-        alert("Please select no greater than 10 balloon!");
+        alert("Please select no greater than 10 balloons!");
         return;
     }
 
-    let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n')
+    let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n');
     let input = document.getElementById("chat-input").value;
     document.getElementById("chat-log").innerHTML += `<p>You: ${input}</p>`;
 
@@ -147,14 +147,21 @@ async function sendMessage() {
             "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-            model: "gpt-4",
+            model: "gpt-4o",
             messages: [{ role: "user", content: context + input }]
         })
     });
 
     let result = await response.json();
+    if (!response.ok) {
+        console.error("OpenAI API Error:", result);
+        alert(`Error: ${result.error.message}`);
+        return;
+    }
+
     document.getElementById("chat-log").innerHTML += `<p>AI: ${result.choices[0].message.content}</p>`;
 }
+
 
 loadBalloons();
 
