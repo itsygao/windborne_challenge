@@ -223,6 +223,11 @@ function redrawBalloons() {
             let dot = L.circleMarker([lat, lon], { radius: 3, color: color, fillOpacity: 1 }).addTo(map);
             balloonMarkers.push(dot);
         });
+
+        latest_data = history[history.length - 1]
+        let marker = L.marker([latest_data[0], latest_data[1]]).addTo(map);
+        marker.bindPopup(`Balloon ${selected[index]}<br>Lat: ${latest_data[0]}<br>Lon: ${latest_data[1]}<br>Altitude: ${latest_data[2]}<br>Timestamp: ${latest_data[3]}`);
+        balloonMarkers.push(marker);
     });
 
     // Update the UI with selected paths info
