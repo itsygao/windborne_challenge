@@ -167,7 +167,7 @@ function createCheckboxes(balloonCount) {
         checkbox.type = "checkbox";
         checkbox.checked = true;
         checkbox.value = i;
-        checkbox.onchange = () => updateVisualization();
+        // checkbox.onchange = () => updateVisualization();
 
         let label = document.createElement("label");
         label.appendChild(checkbox);
@@ -187,6 +187,8 @@ function selectAllBalloons(selectAll) {
 }
 
 function updateVisualization() {
+    let infoText = document.getElementById("info-text");
+    infoText.innerHTML = "Drawing balloon paths...";
     balloonSelections.clear();
     document.querySelectorAll("#balloon-checkboxes input:checked").forEach(cb => {
         balloonSelections.add(parseInt(cb.value));
@@ -225,7 +227,7 @@ function redrawBalloons() {
             balloonMarkers.push(marker); // Store marker for future removal
 
             // Add to info display
-            infoContent += `Balloon ${index}: Lat ${lat}, Lon ${lon}, Altitude ${altitude}, Timestamp ${timestamp}<br>`;
+            infoContent += `Balloon ${Array.from(balloonSelections)[index]}: Lat ${lat}, Lon ${lon}, Altitude ${altitude}, Timestamp ${timestamp}<br>`;
         }
 
         // Draw dots for each location
