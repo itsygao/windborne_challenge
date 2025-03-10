@@ -13,10 +13,10 @@ let lastValidPositions = new Map(); // Stores last known valid positions
 
 // Get the latest balloon data (last 24 hours)
 async function loadBalloons() {
-    const now = new Date();
     const balloonsFolder = "https://itsygao.github.io/windborne_challenge/data/";
     const indexFile = balloonsFolder + "index.json";
     balloonPaths.clear();
+    lastValidPositions.clear();
 
     try {
         // Fetch the list of available JSON files
@@ -25,18 +25,14 @@ async function loadBalloons() {
             console.error("Failed to fetch file list.");
             return;
         }
-        
+
         let fileList = await response.json();
 
-        // Sort files in descending order (latest first) and select at most 24
-        fileList.sort().reverse();
-        let latestFiles = fileList.slice(0, 24);
+        // Sort files in ascending order (oldest first) so newer files can reuse valid values
+        fileList.sort(); 
+        let latestFiles = fileList.slice(Math.max(0, fileList.length - 24)); // Get last 24 files
 
-
-        // Fetch and process balloon data
-        let balloonCount = null; // Stores the expected number of balloons
-        // let balloonPaths = new Map(); // Stores paths by index
-        // let lastValidPositions = new Map(); // Stores last known valid positions
+        let balloonCount = null; // Stores expected number of balloons
 
         for (let file of latestFiles) {
             let url = balloonsFolder + file + ".json";
@@ -49,11 +45,14 @@ async function loadBalloons() {
                     continue;
                 }
 
-                let rawText = await balloonResponse.text(); // Read raw response first
-                let data;
+                let rawText = await balloonResponse.text();
 
+                // Handle NaN values before parsing JSON
+                rawText = rawText.replace(/\bNaN\b/g, "null");
+
+                let data;
                 try {
-                    data = JSON.parse(rawText); // Safely parse JSON
+                    data = JSON.parse(rawText); // Parse the cleaned JSON
                 } catch (jsonError) {
                     console.error(`Failed to parse JSON from ${file}:`, jsonError);
                     continue;
@@ -73,23 +72,21 @@ async function loadBalloons() {
                     continue; // Skip inconsistent file
                 }
 
-                // Process each balloon by its index
+                // Process each balloon
                 data.forEach((balloon, index) => {
                     if (!Array.isArray(balloon) || balloon.length < 3) return; // Ignore malformed data
                     let [lat, lon, altitude] = balloon;
 
-                    // If data is completely invalid, keep previous location if available
-                    if (isNaN(lat) || isNaN(lon) || isNaN(altitude)) {
-                        if (lastValidPositions.has(index)) {
-                            let { lat: prevLat, lon: prevLon } = lastValidPositions.get(index);
-                            lat = prevLat;
-                            lon = prevLon;
-                        } else {
-                            return; // No valid previous position, ignore balloon
-                        }
-                    }
+                    // Handle invalid data by using previous values if available
+                    let lastValid = lastValidPositions.get(index);
+                    if (lat === null || isNaN(lat)) lat = lastValid?.lat ?? null;
+                    if (lon === null || isNaN(lon)) lon = lastValid?.lon ?? null;
+                    if (altitude === null || isNaN(altitude)) altitude = lastValid?.altitude ?? null;
 
-                    // Store latest valid position
+                    // If all values are still null, ignore the entry
+                    if (lat === null || lon === null || altitude === null) return;
+
+                    // Store latest valid position and timestamp
                     lastValidPositions.set(index, { lat, lon, altitude, timestamp });
 
                     // Add to balloon paths
@@ -97,6 +94,9 @@ async function loadBalloons() {
                         balloonPaths.set(index, []);
                     }
                     balloonPaths.get(index).push([lat, lon]);
+
+                    // Add last valid timestamp as an extra entry in the dataset
+                    data[index] = [lat, lon, altitude, timestamp];
                 });
 
             } catch (error) {
@@ -106,23 +106,6 @@ async function loadBalloons() {
 
         createCheckboxes(balloonCount);
         selectAllBalloons(true);
-
-        // Draw balloon paths and add latest markers
-        // let colorIndex = 0;
-        // balloonPaths.forEach((path, id) => {
-        //     if (path.length < 2) return;  // Skip if not enough data points
-            
-        //     let color = COLORS[colorIndex % COLORS.length];
-        //     colorIndex++;
-
-        //     // Draw the path
-        //     L.polyline(path, { color: color, weight: 2 }).addTo(map);
-
-        //     // Add marker only for the latest position
-        //     let latestPos = [lastValidPositions.get(id).lat, lastValidPositions.get(id).lon, lastValidPositions.get(id).altitude, lastValidPositions.get(id).timestamp];
-        //     let marker = L.marker([latestPos[0], latestPos[1]]).addTo(map);
-        //     marker.bindPopup(`Balloon ${id}<br>Lat: ${latestPos[0]}<br>Lon: ${latestPos[1]}<br>Altitude: ${latestPos[2]}<br>timestamp: ${latestPos[3]}`).openPopup();
-        // });
 
     } catch (error) {
         console.error("Error fetching balloon index:", error);
