@@ -122,6 +122,7 @@ async function loadBalloons() {
 
 // AI Chat Function (Uses user-provided API key)
 let chatHistory = []; // Stores all chat messages
+let changedBalloonSelections = true;
 
 async function sendMessage() {
     let apiKey = document.getElementById("api-key").value.trim();
@@ -145,11 +146,17 @@ async function sendMessage() {
     // Only send context in the first message
     if (chatHistory.length === 0) {
         let context = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n');
+        context += "Balloon altitude is in miles. Timestamp is in Pacific Standard Time.\n";
         chatHistory.push({ role: "system", content: context });
+        console.log("Initial context: " + context);
+    } else if (changedBalloonSelections) {
+        input = document.getElementById("info-text").innerHTML.replaceAll('<br>', '\n') + input;
+        changedBalloonSelections = false;
     }
 
     // Add user input to chat history
     chatHistory.push({ role: "user", content: input });
+    console.log("Prompt: " + context);
 
     let response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -218,7 +225,7 @@ function updateVisualization() {
     });
     redrawBalloons()
 
-    console.log("Balloon selections updated. Click Replot to update visualization.");
+    changedBalloonSelections = true;
 }
 
 function redrawBalloons() {
