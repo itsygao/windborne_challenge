@@ -190,44 +190,53 @@ async function sendMessage() {
 
 loadBalloons();
 
-function createCheckboxes(balloonCount) {
-    let checkboxContainer = document.getElementById("balloon-checkboxes");
-    checkboxContainer.innerHTML = ""; // Clear old checkboxes
+function createInputBoxes() {
+    let inputContainer = document.getElementById("balloon-inputs");
+    inputContainer.innerHTML = ""; // Clear old inputs
 
-    for (let i = 0; i < balloonCount; i++) {
-        let checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = true;
-        checkbox.value = i;
-        // checkbox.onchange = () => updateVisualization();
+    for (let i = 0; i < 10; i++) {
+        let input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = `Balloon ${i + 1}`;
+        input.oninput = function () {
+            // Ensure only non-negative integers or empty value
+            this.value = this.value.replace(/[^0-9]/g, '');
+        };
 
-        let label = document.createElement("label");
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(`Balloon ${i}`));
-
-        checkboxContainer.appendChild(label);
+        inputContainer.appendChild(input);
     }
 }
 
 function selectAllBalloons(selectAll) {
     balloonSelections.clear();
-    document.querySelectorAll("#balloon-checkboxes input").forEach(cb => {
-        cb.checked = selectAll;
-        if (selectAll) balloonSelections.add(parseInt(cb.value));
+    
+    if (selectAll) {
+        // Assume all balloons are selected (Modify the range as needed)
+        for (let i = 0; i < balloonPaths.size; i++) {
+            balloonSelections.add(i);
+        }
+    }
+    
+    updateVisualization();
+}
+
+function updateBalloonSelections() {
+    balloonSelections.clear();
+    document.querySelectorAll("#balloon-inputs input").forEach(input => {
+        let val = input.value.trim();
+        if (val !== "") {
+            balloonSelections.add(parseInt(val));
+        }
     });
-    // updateVisualization();
+    
+    updateVisualization();
 }
 
 function updateVisualization() {
     let infoText = document.getElementById("info-text");
     infoText.innerHTML = "Drawing balloon paths...";
-    balloonSelections.clear();
-    document.querySelectorAll("#balloon-checkboxes input:checked").forEach(cb => {
-        balloonSelections.add(parseInt(cb.value));
-    });
-    redrawBalloons()
-
-    changedBalloonSelections = true;
+    
+    redrawBalloons();
 }
 
 function redrawBalloons() {
@@ -237,9 +246,9 @@ function redrawBalloons() {
 
     let selectedPaths = Array.from(balloonSelections).map(i => balloonPaths.get(i));
     let selectedDetails = Array.from(balloonSelections).map(i => balloonDetails.get(i));
-    let infoText = document.getElementById("info-text"); // Get the info display area
+    let infoText = document.getElementById("info-text");
 
-    let infoContent = ""; // Store the information text
+    let infoContent = "";
     let selected = Array.from(balloonSelections);
 
     selectedPaths.forEach((path, index) => {
@@ -252,16 +261,13 @@ function redrawBalloons() {
         let polyline = L.polyline(path, { color: color, weight: 2 }).addTo(map);
         balloonMarkers.push(polyline);
 
-        // Ensure historical details exist before displaying them
         let history = balloonDetails.get(balloonId);
         if (history) {
             infoContent += `**Balloon ${balloonId} History:**<br>`;
-
             history.forEach(([lat, lon, altitude, timestamp]) => {
                 infoContent += `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}, Altitude: ${altitude.toFixed(2)}, Timestamp: ${timestamp}<br>`;
             });
-
-            infoContent += "<br>"; // Add space between different balloons
+            infoContent += "<br>";
         }
 
         // Draw markers for each historical point
@@ -270,16 +276,14 @@ function redrawBalloons() {
             balloonMarkers.push(dot);
         });
 
-        latest_data = history[history.length - 1]
+        let latest_data = history[history.length - 1];
         let marker = L.marker([latest_data[0], latest_data[1]]).addTo(map);
         marker.bindPopup(`Balloon ${selected[index]}<br>Lat: ${latest_data[0]}<br>Lon: ${latest_data[1]}<br>Altitude: ${latest_data[2]}<br>Timestamp: ${latest_data[3]}`);
         balloonMarkers.push(marker);
     });
 
-    // Update the UI with selected paths info
-    if (selectedPaths.length < 10) {
-        infoText.innerHTML = infoContent || "No balloons selected.";
-    } else {
-        infoText.innerHTML = "Too many balloons selected, data hidden.";
-    }
+    infoText.innerHTML = selectedPaths.length < 10 ? infoContent || "No balloons selected." : "Too many balloons selected, data hidden.";
 }
+
+// Initialize input boxes on page load
+document.addEventListener("DOMContentLoaded", createInputBoxes);
