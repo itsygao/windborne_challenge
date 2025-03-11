@@ -10,12 +10,14 @@
             font-family: Arial, sans-serif;
         }
         #map {
-            height: 80vh;
+            height: 60vh;
             width: 100%;
+            max-width: 1000px;
+            margin: 20px auto;
         }
-        #chatbox {
+        #chatbox, #info-control {
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
             margin: 20px auto;
             background: white;
             overflow-y: auto;
@@ -37,11 +39,19 @@
             margin: 5px 0;
             width: 100%;
         }
-        #balloon-checkboxes label {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px; /* Space between checkbox and label */
-            margin-right: 10px; /* Space between different checkboxes */
+        #balloon-inputs {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 columns */
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 10px;
+        }
+
+        #balloon-inputs input {
+            width: 100%;
+            text-align: center;
+            padding: 8px;
         }
     </style>
 </head>
@@ -76,15 +86,16 @@
         <input type="text" id="chat-input" placeholder="Ask about a balloon! **Balloon Info:** below will be used as context!" />
         <button onclick="sendMessage()">Ask</button>
     </div>
-    <div id="balloon-info" style="margin: 10px 0; padding: 5px; border: 1px solid #ccc; min-height: 40px;">
-        **Balloon Info:**<br> <span id="info-text">Select balloons to see details here.</span>
+    <div id="info-control">
+        <div id="balloon-info" style="margin: 10px 0; padding: 5px; border: 1px solid #ccc; min-height: 300px; max-height: 300px; overflow: scroll">
+            **Balloon Info:**<br> <span id="info-text">Select balloons to see details here.</span>
+        </div>
+        <div id="controls">
+            <div id="balloon-inputs"></div>
+            <button onclick="selectAllBalloons(true)">Visualize All</button>
+            <button onclick="updateBalloonSelections()">Plot & Show Details</button>
+        </div>
     </div>
-    <div id="controls">
-        <button onclick="selectAllBalloons(true)">Visualize All</button>
-        <button onclick="updateBalloonSelections()">Plot & Show Details</button>
-        <div id="balloon-inputs"></div>
-    </div>
-    
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>

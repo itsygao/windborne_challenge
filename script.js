@@ -113,7 +113,6 @@ async function loadBalloons() {
             }
         }
 
-        createCheckboxes(balloonCount);
         selectAllBalloons(true);
 
     } catch (error) {
@@ -199,8 +198,7 @@ function createInputBoxes() {
         input.type = "text";
         input.placeholder = `Balloon ${i + 1}`;
         input.oninput = function () {
-            // Ensure only non-negative integers or empty value
-            this.value = this.value.replace(/[^0-9]/g, '');
+            this.value = this.value.replace(/[^0-9]/g, ''); // Allow only numbers
         };
 
         inputContainer.appendChild(input);
