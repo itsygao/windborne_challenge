@@ -63,16 +63,15 @@
     <div id="chatbox">
         <p><strong>AI Chat:</strong></p>
         <p><strong>How to Use:</strong>
-            <br>1. Scroll down and wait for all balloons with checkboxes to load below the buttons.
-            <br>2. Click "Select All" and then "Plot & Show Details" to visualize the balloon locations.
+            <br>1. Wait for all balloons to load on the map.
             <br> (You can click on the locators shown on the map to view balloon indexes.)
-            <br>3. Select up to 10 balloons you wish to inquire about.
-            <br>4. Click "Plot & Show Details" to visualize only the selected balloons and display their trajectory details. These details will be included in the prompt.
+            <br>2. Enter the indexes of up to 10 balloons you wish to inquire about.
+            <br>3. Click "Plot Selected & Show Details" button to visualize only the selected balloons and display their trajectory details. These details will be included in the prompt.
             <br>5. Select a model, enter your OpenAI API key and your question, then click "Ask".
-            <br>6. You may repeat steps 3 through 5 as needed.
+            <br>6. You may repeat steps 2 through 5 as needed.
             <br><strong>Example questions:</strong> Which countries did balloon X travel across? What does the trajectory suggest about wind patterns? Predict its location in the next 24 hours.
             <br><strong>*Ensure that the balloon trajectory details are displayed in the details section before asking questions about a new balloon.*</strong>
-            <br>Additional Tip: If you need to inquire about more than 10 balloons, you can do so by repeating steps 3 through 5 multiple times.</p>
+            <br>Additional Tip: If you need to inquire about more than 10 balloons, you can do so by repeating steps 2 through 5 multiple times.</p>
 
         <label for="model-select"><strong>Select Model:</strong></label>
         <select id="model-select">
@@ -91,9 +90,11 @@
             **Balloon Info:**<br> <span id="info-text">Select balloons to see details here.</span>
         </div>
         <div id="controls">
+            <p><strong>Enter up to 10 balloon indexes here:</strong></p>
             <div id="balloon-inputs"></div>
             <button onclick="selectAllBalloons(true)">Visualize All</button>
-            <button onclick="updateBalloonSelections()">Plot & Show Details</button>
+            <button onclick="updateBalloonSelections()">Plot Selected & Show Details</button>
+            <button onclick="clearInputs()">Clear Inputs</button>
         </div>
     </div>
 

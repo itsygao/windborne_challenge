@@ -205,6 +205,13 @@ function createInputBoxes() {
     }
 }
 
+function clearInputs() {
+    document.querySelectorAll("#balloon-inputs input").forEach(input => {
+        input.value = ""; // Clear all input fields
+    });
+    balloonSelections.clear(); // Clear selections
+}
+
 function selectAllBalloons(selectAll) {
     balloonSelections.clear();
     
