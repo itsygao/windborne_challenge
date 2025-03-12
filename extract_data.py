@@ -158,4 +158,4 @@ def commit_and_push():
 
 if __name__ == "__main__":
     updated_files = process_data()
-    # commit_and_push()
+    commit_and_push()
