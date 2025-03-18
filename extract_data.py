@@ -78,9 +78,9 @@ def save_json(data, timestamp):
     filepath = os.path.join(JSON_FOLDER_PATH, filename)
 
     # Avoid creating duplicate files
-    if os.path.exists(filepath):
-        print(f"File already exists, skipping: {filename}")
-        return filepath
+    # if os.path.exists(filepath):
+    #     print(f"File already exists, skipping: {filename}")
+    #     return filepath
 
     with open(filepath, "w") as f:
         json.dump(data, f, indent=4)
@@ -95,50 +95,42 @@ def update_index_json(timestamps):
 def process_data():
     """ Main function to fetch, compare, and store JSON files """
     local_files, timestamps = scan_local_files()
+    timestamps = set(timestamps)
     now = datetime.now()
     missing_files = []
+    now_missing_but_old = []
     warnings = []
     last_known_hashes = {}
 
     for hour in range(24):
         json_data = fetch_json(hour)
-        if json_data is None:
-            missing_files.append(f"{hour:02d}.json")
-            continue
-
-        # Compute hash of new data
-        new_hash = hashlib.sha256(json.dumps(json_data, sort_keys=True).encode()).hexdigest()
-
         # Generate the timestamp for this file based on the hour offset
         timestamp = (now - timedelta(hours=hour)).strftime("%Y%m%d-%H%M")
-
-        # Check for duplicates
-        duplicate_found = False
-        for timestamp_str, filepath in local_files.items():
-            old_hash = get_file_hash(filepath)
-            if old_hash == new_hash:  # Duplicate found
-                duplicate_found = True
-                print(f"Duplicate detected for {hour:02d}.json, reusing file: {timestamp_str}.json")
-                break
-
-        if not duplicate_found:
-            save_path = save_json(json_data, timestamp)
-            local_files[timestamp] = save_path  # Update scanned files
-            timestamps.append(timestamp)  # Add new file timestamp
-
-            # Check for data change warning
-            last_hash = last_known_hashes.get(hour)
-            if last_hash and last_hash != new_hash:
-                warnings.append(f"WARNING: {hour:02d}.json changed! Previous file: {last_hash}, new file timestamp: {timestamp}")
-
-            last_known_hashes[hour] = new_hash  # Store new hash
+        if json_data is None:
+            missing_files.append(f"{hour:02d}.json")
+            if timestamp in local_files:
+                now_missing_but_old.append(f"{timestamp}.json")
+            continue
+        elif timestamp in local_files:
+            # Check if the local file is up-to-date
+            local_path = local_files[timestamp]
+            with open(local_path, "r") as f:
+                local_data = json.load(f)
+            if local_data != json_data:
+                warnings.append(f"WARNING: {timestamp}.json changed! Previous file: {local_path}, new file timestamp: {timestamp}")
+        print(f"Now {now}, hour: {hour:02d} fetched", json_data[:1])
+        save_path = save_json(json_data, timestamp)
+        local_files[timestamp] = save_path  # Update scanned files
+        timestamps.add(timestamp)  # Add new file timestamp
 
     # Update index.json
-    timestamps.sort(reverse=True)  # Ensure it's sorted (latest first)
+    timestamps = sorted(list(timestamps), reverse=True)  # Ensure it's sorted (latest first)
     update_index_json(timestamps)
 
     if missing_files:
         print("Missing data:", ", ".join(missing_files))
+    if now_missing_but_old:
+        print("Now missing but old:", ", ".join(now_missing_but_old))
     if warnings:
         print("\n".join(warnings))
 
